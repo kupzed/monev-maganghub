@@ -1,20 +1,66 @@
 {
   "manifest_version": 3,
-  "name": "MagangHub AI Report Filler (Personal)",
+  "name": "MagangHub AI Report Assistant",
   "version": "2.0.0",
-  "description": "Tombol AI melayang di halaman laporan MagangHub untuk isi otomatis 3 kolom laporan harian pakai Gemini AI. Untuk pemakaian pribadi.",
-  "permissions": ["storage", "alarms", "notifications", "scripting", "activeTab"],
-  "background": {
-    "service_worker": "background.js"
+  "description": "Asisten pintar pengisi laporan harian MagangHub Kemnaker berbasis AI Gemini dengan fitur preview, template, logbook, dan pengingat.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "MagangHub AI Assistant"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications",
+    "scripting",
+    "activeTab",
+    "tabs"
+  ],
   "host_permissions": [
-    "*://*/*"
+    "https://monev.maganghub.kemnaker.go.id/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://monev.maganghub.kemnaker.go.id/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://monev.maganghub.kemnaker.go.id/*"
+      ],
+      "js": [
+        "src/utils/storage.js",
+        "src/utils/templates.js",
+        "src/utils/gemini.js",
+        "src/content/content.js"
+      ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "src/content/*"
+      ],
+      "matches": [
+        "https://monev.maganghub.kemnaker.go.id/*"
+      ]
     }
   ]
 }
