@@ -160,7 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnGenerate.innerHTML = `<span class="btn-icon">⏳</span><span class="btn-label">Sedang Menulis Laporan...</span>`;
 
     try {
-      const result = await GeminiClient.generateReport(settings.geminiApiKey, bullets, settings);
+      const history = await StorageUtil.getHistory();
+      const result = await GeminiClient.generateReport(settings.geminiApiKey, bullets, settings, null, history);
 
       resAktivitas.value = result.aktivitas;
       resPembelajaran.value = result.pembelajaran;

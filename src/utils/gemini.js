@@ -58,17 +58,47 @@ class GeminiClient {
   }
 
   /**
-   * Build generation prompt based on settings
+   * Build generation prompt based on settings & previous report history (contextual memory)
    */
-  static buildPrompt(bullets, options = {}) {
+  static buildPrompt(bullets, options = {}, recentHistory = []) {
     const tone = options.reportTone || 'formal';
     const toneInstruction = TONE_PROMPTS[tone] || TONE_PROMPTS.formal;
     const customInstructions = options.customInstructions ? `\nPetunjuk Khusus Tambahan: ${options.customInstructions}` : '';
     const minChar = options.minCharLimit || 100;
 
-    return `Kamu adalah asisten profesional yang bertugas membantu peserta MagangHub Kemnaker menyusun laporan harian magang berkualitas tinggi.
+    let memoryContextPrompt = '';
+    const enableMemory = options.enableMemoryContext !== false;
+    const historyToUse = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
 
-Catatan kegiatan mentah dari peserta:
+    if (enableMemory && historyToUse.length > 0) {
+      const maxCount = options.memoryContextCount || 3;
+      const sliced = historyToUse.slice(0, maxCount);
+
+      const historyBlocks = sliced.map((item, idx) => {
+        const date = item.dateStr || (item.timestamp ? item.timestamp.split('T')[0] : `Hari -${idx + 1}`);
+        return `[Laporan Riwayat #${idx + 1} (${date})]:
+- Catatan Poin Mentah: ${item.bullets || '-'}
+- Aktivitas: ${item.aktivitas || '-'}
+- Pembelajaran: ${item.pembelajaran || '-'}
+- Kendala: ${item.kendala || '-'}`;
+      }).join('\n\n');
+
+      memoryContextPrompt = `
+MEMORI & KONTEKS LAPORAN SEBELUMNYA (Contextual Memory):
+Berikut adalah ${sliced.length} laporan harian terakhir yang pernah dibuat oleh peserta:
+"""
+${historyBlocks}
+"""
+Petunjuk Pemanfaatan Memori:
+1. Jika catatan kegiatan hari ini merujuk ke tugas/kelanjutan kemarin (misal: "lanjutkan task kemarin", "fixing kendala database", "follow up meeting"), gunakan informasi di atas untuk memahami konteks dan buat narasi perkembangan yang berkesinambungan secara logis.
+2. Hindari pengulangan frasa/kalimat yang monoton dari hari sebelumnya agar laporan terasa memiliki progres nyata.
+3. Fokus utama laporan tetap pada catatan baru hari ini.
+`;
+    }
+
+    return `Kamu adalah asisten profesional yang bertugas membantu peserta MagangHub Kemnaker menyusun laporan harian magang berkualitas tinggi.
+${memoryContextPrompt}
+Catatan kegiatan mentah dari peserta untuk HARI INI:
 """
 ${bullets}
 """
@@ -93,7 +123,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
   /**
    * Generate 3-part report from bullets
    */
-  static async generateReport(apiKey, bullets, options = {}, onRetry) {
+  static async generateReport(apiKey, bullets, options = {}, onRetry, recentHistory = []) {
     if (!apiKey || !apiKey.trim()) {
       throw new Error('Gemini API Key belum diatur. Silakan atur di Pengaturan Ekstensi.');
     }
@@ -102,7 +132,8 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
     }
 
     const model = options.selectedModel || 'gemini-2.5-flash';
-    const prompt = this.buildPrompt(bullets, options);
+    const historyList = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
+    const prompt = this.buildPrompt(bullets, options, historyList);
     const cleanKey = apiKey.trim();
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
 

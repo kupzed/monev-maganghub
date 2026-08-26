@@ -110,6 +110,35 @@
           </div>
         </div>
 
+        <div class="card">
+          <h3 class="card-title">3. 🧠 Memori Konteks AI (AI Contextual Memory)</h3>
+          <p class="card-description">
+            Memungkinkan AI membaca riwayat laporan sebelumnya agar narasi tugas terasa berkesinambungan, progresif, dan memahami referensi seperti <em>"melanjutkan task kemarin"</em>.
+          </p>
+
+          <div class="switch-group">
+            <div class="switch-info">
+              <span class="switch-label">Aktifkan Memori Konteks Laporan</span>
+              <span class="switch-desc">Sertakan ringkasan laporan sebelumnya saat mengenerate laporan baru.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="optEnableMemoryContext" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="optMemoryContextCount">Jumlah Laporan Sebelumnya yang Diingat</label>
+            <select id="optMemoryContextCount">
+              <option value="1">1 Laporan Terakhir (Kemarin Saja)</option>
+              <option value="2">2 Laporan Terakhir</option>
+              <option value="3" selected>3 Laporan Terakhir (Rekomendasi)</option>
+              <option value="5">5 Laporan Terakhir (Satu Minggu Kerja)</option>
+            </select>
+            <span class="field-hint">Data memori diambil langsung dari tab Riwayat Logbook lokal di browser Anda.</span>
+          </div>
+        </div>
+
         <div class="form-actions">
           <button id="btnSaveAiSettings" class="btn-primary">💾 Simpan Konfigurasi AI</button>
         </div>

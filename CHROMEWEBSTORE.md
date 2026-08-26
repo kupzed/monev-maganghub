@@ -35,19 +35,21 @@ Apakah kamu sering bingung menyusun kata-kata formal atau sering terburu-buru me
 2. 📝 Floating Action Button (FAB) yang Fleksibel:
    - Tombol asisten melayang langsung di portal Monev MagangHub.
    - Posisi tombol dapat di-drag & drop ke mana saja di layar dan otomatis mengingat posisinya.
-3. 👁️ Live Preview & Live Character Counter:
+3. 🧠 AI Contextual Memory (Memori Konteks Laporan):
+   - AI secara cerdas membaca 1–5 laporan hari-hari sebelumnya sehingga memahami konteks tugas lanjutan (misal: "lanjutkan task kemarin") dan alur perkembangan pekerjaan terasa progresif tanpa repetisi kata.
+4. 👁️ Live Preview & Live Character Counter:
    - Periksa dan sesuaikan kalimat sebelum disuntikkan ke form.
    - Indikator badge karakter live (Hijau jika >= 100 karakter, Merah jika kurang).
-4. 📑 Pustaka Template Kustom:
+5. 📑 Pustaka Template Kustom:
    - Tersedia preset cepat untuk peran: Software Engineer, UI/UX Designer, Data & Admin, Digital Marketing, Training, dan WFH.
    - Kamu juga dapat membuat dan menyimpan template rutin kamu sendiri!
-5. ⏰ Pengingat Absen & Notifikasi Desktop:
+6. ⏰ Pengingat Absen & Notifikasi Desktop:
    - Alarm otomatis yang mengingatkan kamu saat jam pulang (default 17:00).
    - Opsi lewati akhir pekan (Sabtu & Minggu) dan langsung membuka halaman laporan hari ini.
-6. 📜 Riwayat Laporan & Ekspor Logbook:
+7. 📜 Riwayat Laporan & Ekspor Logbook:
    - Seluruh laporan yang pernah dibuat tersimpan aman di browser kamu.
    - Ekspor seluruh riwayat ke format Markdown (.md), JSON, atau CSV untuk kebutuhan laporan akhir kampus/portofolio magang!
-7. 🔒 Privasi Terjamin 100%:
+8. 🔒 Privasi Terjamin 100%:
    - API Key dan riwayat laporan tersimpan LOKAL di browser kamu. Tidak ada data yang dikirim ke server pihak ketiga manapun selain langsung ke endpoint resmi Google Generative AI.
 
 CARA PENGGUNAAN:

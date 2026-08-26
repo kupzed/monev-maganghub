@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
   reminderTime: '17:00',
   reminderSkipWeekends: true,
   minCharLimit: 100,
+  enableMemoryContext: true,
+  memoryContextCount: 3,
   autoFillDirectly: false,
   fabPosition: { right: 24, bottom: 24 },
   lastBullets: ''

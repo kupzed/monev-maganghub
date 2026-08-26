@@ -558,10 +558,11 @@
     try {
       let result;
       if (typeof GeminiClient !== 'undefined') {
-        const fullSettings = await StorageUtil.getSettings();
+        const fullSettings = typeof StorageUtil !== 'undefined' ? await StorageUtil.getSettings() : await chrome.storage.local.get(null);
+        const history = typeof StorageUtil !== 'undefined' ? await StorageUtil.getHistory() : [];
         result = await GeminiClient.generateReport(geminiApiKey, bullets, fullSettings, (attempt, max) => {
           setStatus(`Server AI sibuk, mencoba ulang (${attempt}/${max})...`, '');
-        });
+        }, history);
       } else {
         throw new Error('Modul AI Client belum termuat.');
       }

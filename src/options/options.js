@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const optModel = document.getElementById('optModel');
   const optTone = document.getElementById('optTone');
   const optCustomInstructions = document.getElementById('optCustomInstructions');
+  const optEnableMemoryContext = document.getElementById('optEnableMemoryContext');
+  const optMemoryContextCount = document.getElementById('optMemoryContextCount');
   const btnSaveAiSettings = document.getElementById('btnSaveAiSettings');
 
   // Reminder Tab Elements
@@ -81,6 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   optModel.value = settings.selectedModel || 'gemini-2.5-flash';
   optTone.value = settings.reportTone || 'formal';
   optCustomInstructions.value = settings.customInstructions || '';
+  optEnableMemoryContext.checked = settings.enableMemoryContext !== undefined ? settings.enableMemoryContext : true;
+  optMemoryContextCount.value = String(settings.memoryContextCount || 3);
 
   optReminderEnabled.checked = settings.reminderEnabled !== undefined ? settings.reminderEnabled : true;
   optReminderTime.value = settings.reminderTime || '17:00';
@@ -140,15 +144,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const model = optModel.value;
     const tone = optTone.value;
     const customInstructions = optCustomInstructions.value.trim();
+    const enableMemory = optEnableMemoryContext.checked;
+    const memoryCount = parseInt(optMemoryContextCount.value, 10) || 3;
 
     await StorageUtil.saveSettings({
       geminiApiKey: key,
       selectedModel: model,
       reportTone: tone,
-      customInstructions: customInstructions
+      customInstructions: customInstructions,
+      enableMemoryContext: enableMemory,
+      memoryContextCount: memoryCount
     });
 
-    showToast('Konfigurasi AI berhasil disimpan!', 'success');
+    showToast('Konfigurasi AI & Memori berhasil disimpan!', 'success');
   });
 
   // Save Reminder Settings
