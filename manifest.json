@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "MagangHub AI Report Filler (Personal)",
+  "version": "2.0.0",
+  "description": "Tombol AI melayang di halaman laporan MagangHub untuk isi otomatis 3 kolom laporan harian pakai Gemini AI. Untuk pemakaian pribadi.",
+  "permissions": ["storage", "alarms", "notifications", "scripting", "activeTab"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://monev.maganghub.kemnaker.go.id/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
