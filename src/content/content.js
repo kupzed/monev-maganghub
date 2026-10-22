@@ -58,7 +58,7 @@
       transform: translateY(10px) scale(0.98);
     }
     .panel.open {
-      max-height: 680px;
+      max-height: 720px;
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0) scale(1);
@@ -68,7 +68,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 640px;
+      max-height: 680px;
       overflow-y: auto;
     }
     .panel-header {
@@ -285,6 +285,12 @@
         </div>
 
         <div>
+          <span class="field-label">Pilih Model AI</span>
+          <select class="preset-dropdown" id="modelSelect">
+          </select>
+        </div>
+
+        <div>
           <span class="field-label">Pilih Template Cepat</span>
           <select class="preset-dropdown" id="presetSelect">
             <option value="">-- Pilih Template Kegiatan --</option>
@@ -356,6 +362,7 @@
   const quickSettings = root.getElementById('quickSettings');
   const inputApiKey = root.getElementById('inputApiKey');
   const btnSaveKey = root.getElementById('btnSaveKey');
+  const modelSelect = root.getElementById('modelSelect');
   const presetSelect = root.getElementById('presetSelect');
   const bulletsArea = root.getElementById('bulletsArea');
   const btnGenerate = root.getElementById('btnGenerate');
@@ -402,6 +409,26 @@
       fab.style.bottom = `${settings.fabPosition.bottom}px`;
       panel.style.right = `${settings.fabPosition.right}px`;
       panel.style.bottom = `${settings.fabPosition.bottom + 66}px`;
+    }
+
+    // Populate Models
+    const modelsList = typeof AVAILABLE_MODELS !== 'undefined' ? AVAILABLE_MODELS : [
+      { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite (Super Cepat & Efisien - Rekomendasi)' },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Cepat & Cerdas)' },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Lebih Detail & Mendalam)' },
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' }
+    ];
+
+    if (modelSelect) {
+      modelSelect.innerHTML = '';
+      modelsList.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        modelSelect.appendChild(opt);
+      });
+      modelSelect.value = settings.selectedModel || 'gemini-3.1-flash-lite';
     }
 
     // Populate Templates
@@ -495,6 +522,25 @@
     setTimeout(() => quickSettings.classList.remove('open'), 1200);
   });
 
+  // Model Change Handler
+  if (modelSelect) {
+    modelSelect.addEventListener('change', async () => {
+      const selectedModel = modelSelect.value;
+      settings.selectedModel = selectedModel;
+      if (typeof StorageUtil !== 'undefined') {
+        await StorageUtil.saveSettings({ selectedModel });
+      } else {
+        await chrome.storage.local.set({ selectedModel });
+      }
+      setStatus(`Model AI diubah ke: ${selectedModel}`, 'success');
+      setTimeout(() => {
+        if (widgetStatus.textContent.includes('Model AI diubah')) {
+          widgetStatus.textContent = '';
+        }
+      }, 2000);
+    });
+  }
+
   // Template Change Handler
   presetSelect.addEventListener('change', async () => {
     const val = presetSelect.value;
@@ -559,6 +605,9 @@
       let result;
       if (typeof GeminiClient !== 'undefined') {
         const fullSettings = typeof StorageUtil !== 'undefined' ? await StorageUtil.getSettings() : await chrome.storage.local.get(null);
+        if (modelSelect && modelSelect.value) {
+          fullSettings.selectedModel = modelSelect.value;
+        }
         const history = typeof StorageUtil !== 'undefined' ? await StorageUtil.getHistory() : [];
         result = await GeminiClient.generateReport(geminiApiKey, bullets, fullSettings, (attempt, max) => {
           setStatus(`Server AI sibuk, mencoba ulang (${attempt}/${max})...`, '');

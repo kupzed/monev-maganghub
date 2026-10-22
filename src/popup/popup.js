@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnOpenOptions = document.getElementById('btnOpenOptions');
   const btnOpenMonev = document.getElementById('btnOpenMonev');
   const currentDateStr = document.getElementById('currentDateStr');
+  const selectModel = document.getElementById('selectModel');
   const selectPreset = document.getElementById('selectPreset');
   const bulletsInput = document.getElementById('bulletsInput');
   const btnGenerate = document.getElementById('btnGenerate');
@@ -48,6 +49,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   updateStatusUI();
+
+  // Populate Models
+  if (typeof AVAILABLE_MODELS !== 'undefined' && selectModel) {
+    selectModel.innerHTML = '';
+    AVAILABLE_MODELS.forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      selectModel.appendChild(opt);
+    });
+    selectModel.value = settings.selectedModel || 'gemini-3.1-flash-lite';
+
+    selectModel.addEventListener('change', async () => {
+      const chosen = selectModel.value;
+      settings.selectedModel = chosen;
+      await StorageUtil.saveSettings({ selectedModel: chosen });
+      updateStatusUI();
+    });
+  }
 
   // Restore last bullets if available
   if (settings.lastBullets) {
@@ -147,6 +167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Reload settings in case updated
     settings = await StorageUtil.getSettings();
+    if (selectModel && selectModel.value) {
+      settings.selectedModel = selectModel.value;
+    }
     if (!settings.geminiApiKey) {
       alert('Gemini API Key belum diatur. Silakan atur di menu Pengaturan.');
       openOptions();
