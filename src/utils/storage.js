@@ -5,7 +5,7 @@
 
 const DEFAULT_SETTINGS = {
   geminiApiKey: '',
-  selectedModel: 'gemini-2.5-flash',
+  selectedModel: 'gemini-3.1-flash-lite',
   reportTone: 'formal', // 'formal', 'detailed', 'concise', 'casual_polite'
   customInstructions: '',
   reminderEnabled: true,
@@ -76,7 +76,7 @@ const StorageUtil = {
       aktivitas: entry.aktivitas || '',
       pembelajaran: entry.pembelajaran || '',
       kendala: entry.kendala || '',
-      modelUsed: entry.modelUsed || 'gemini-2.5-flash'
+      modelUsed: entry.modelUsed || 'gemini-3.1-flash-lite'
     };
 
     history.unshift(newEntry);

@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusActionBtn.classList.remove('hidden');
     } else {
       statusBanner.className = 'status-banner ready';
-      statusText.textContent = `Siap (${settings.selectedModel || 'gemini-2.5-flash'})`;
+      statusText.textContent = `Siap (${settings.selectedModel || 'gemini-3.1-flash-lite'})`;
       statusActionBtn.classList.add('hidden');
     }
   }

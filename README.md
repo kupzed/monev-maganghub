@@ -3,14 +3,14 @@
 > Ekstensi Chrome modern & profesional berbasis AI Gemini untuk membantu peserta MagangHub Kemnaker menyusun laporan harian (Aktivitas, Pembelajaran, Kendala) secara otomatis, rapi, dan memenuhi syarat minimal 100 karakter.
 
 ![Chrome Extension MV3](https://img.shields.io/badge/Manifest-V3-blue.svg)
-![AI Powered](https://img.shields.io/badge/AI-Google%20Gemini%202.5-orange.svg)
+![AI Powered](https://img.shields.io/badge/AI-Google%20Gemini%203.1-orange.svg)
 ![Privacy](https://img.shields.io/badge/Privacy-100%25%20Local-green.svg)
 
 ---
 
 ## 🌟 Fitur Utama
 
-- ⚡ **AI Generator Multi-Model**: Mendukung Google Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, dan Gemini 1.5 Flash.
+- ⚡ **AI Generator Multi-Model**: Mendukung Google Gemini 3.1 Flash-Lite, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, dan Gemini 1.5 Flash.
 - 🧠 **AI Contextual Memory**: AI secara cerdas mengingat 1–5 laporan hari-hari sebelumnya sehingga narasi tugas terasa berkesinambungan dan memahami referensi seperti *"melanjutkan task kemarin"*.
 - 🎨 **Gaya Bahasa Fleksibel**: Pilihan tone formal akademik, sangat terperinci, ringkas padat, atau santun luwes.
 - 📝 **Draggable Floating Action Button (FAB)**: Tombol asisten di portal Monev MagangHub yang bisa digeser (drag & drop) ke posisi mana saja di layar dan mengingat posisinya.

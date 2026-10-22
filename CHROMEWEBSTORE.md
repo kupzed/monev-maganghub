@@ -93,7 +93,7 @@ Semua izin yang digunakan dalam `manifest.json` memiliki alasan fungsional yang 
 - **Toolbar Action Popup**: Dashboard popup lengkap dengan status API key, generator cepat, dan link hari ini.
 - **Dedicated Options Page**: Dashboard pengaturan tabbed (Konfigurasi AI, Alarm Notifikasi, Template Manager, Riwayat Logbook, Ekspor Markdown/JSON/CSV).
 - **Interactive In-Page Widget**: Shadow DOM encapsulated dengan tombol melayang draggable yang mengingat posisi, live character counter (min. 100 karakter), dan preview modal sebelum input ke form.
-- **Dukungan Multi-Model**: Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, Gemini 1.5 Flash dengan tone selector.
+- **Dukungan Multi-Model**: Gemini 3.1 Flash-Lite, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, Gemini 1.5 Flash dengan tone selector.
 - **Alarm & Desktop Notification**: Pengingat jam pulang kerja dengan skip weekend otomatis.
 
 ### Version 1.0.0 (Legacy Initial Prototype)

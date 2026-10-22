@@ -80,7 +80,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await StorageUtil.getSettings();
 
   optApiKey.value = settings.geminiApiKey || '';
-  optModel.value = settings.selectedModel || 'gemini-2.5-flash';
+
+  if (typeof AVAILABLE_MODELS !== 'undefined' && AVAILABLE_MODELS.length > 0) {
+    optModel.innerHTML = '';
+    AVAILABLE_MODELS.forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      optModel.appendChild(opt);
+    });
+  }
+
+  optModel.value = settings.selectedModel || 'gemini-3.1-flash-lite';
   optTone.value = settings.reportTone || 'formal';
   optCustomInstructions.value = settings.customInstructions || '';
   optEnableMemoryContext.checked = settings.enableMemoryContext !== undefined ? settings.enableMemoryContext : true;

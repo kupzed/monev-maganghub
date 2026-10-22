@@ -4,7 +4,8 @@
  */
 
 const AVAILABLE_MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Sangat Cepat & Cerdas - Rekomendasi)' },
+  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite (Super Cepat & Efisien - Rekomendasi)' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Cepat & Cerdas)' },
   { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Lebih Detail & Mendalam)' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
   { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' }
@@ -25,7 +26,7 @@ class GeminiClient {
   /**
    * Test API Key validity
    */
-  static async testApiKey(apiKey, model = 'gemini-2.5-flash') {
+  static async testApiKey(apiKey, model = 'gemini-3.1-flash-lite') {
     if (!apiKey || !apiKey.trim()) {
       throw new Error('API Key tidak boleh kosong.');
     }
@@ -131,7 +132,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
       throw new Error('Poin catatan kegiatan masih kosong.');
     }
 
-    const model = options.selectedModel || 'gemini-2.5-flash';
+    const model = options.selectedModel || 'gemini-3.1-flash-lite';
     const historyList = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
     const prompt = this.buildPrompt(bullets, options, historyList);
     const cleanKey = apiKey.trim();
