@@ -25,18 +25,54 @@ class GeminiClient {
   }
 
   /**
+   * Check if endpoint or config is OpenAI-compatible (NVIDIA NIM, OpenRouter, Groq, Ollama, DeepSeek, etc.)
+   */
+  static isOpenAiCompatible(baseUrl = '', apiKey = '', model = '') {
+    const base = (baseUrl || '').trim().toLowerCase();
+    const key = (apiKey || '').trim();
+    const mdl = (model || '').trim();
+
+    if (base.includes('/chat/completions') || base.includes('/openai')) {
+      return true;
+    }
+
+    if (base && !base.includes('generativelanguage.googleapis.com')) {
+      return true;
+    }
+
+    if (key.startsWith('nvapi-') || key.startsWith('sk-')) {
+      return true;
+    }
+
+    if (mdl.includes('/') && base && !base.includes('generativelanguage.googleapis.com')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Helper to resolve the correct endpoint URL given a base URL, model name, and API key
    */
   static getEndpointUrl(baseUrl, model, apiKey) {
+    const cleanKey = apiKey ? apiKey.trim() : '';
+    const safeModel = (model && model.trim() && model !== 'custom') ? model.trim() : 'gemini-3.1-flash-lite';
+
+    if (this.isOpenAiCompatible(baseUrl, cleanKey, safeModel)) {
+      let base = (baseUrl && baseUrl.trim()) ? baseUrl.trim() : 'https://integrate.api.nvidia.com/v1';
+      base = base.replace(/\/+$/, '');
+      if (base.endsWith('/chat/completions')) {
+        return base;
+      }
+      return `${base}/chat/completions`;
+    }
+
     let base = (baseUrl && baseUrl.trim()) ? baseUrl.trim() : 'https://generativelanguage.googleapis.com/v1beta';
     base = base.replace(/\/+$/, '');
 
     if (base === 'https://generativelanguage.googleapis.com') {
       base = 'https://generativelanguage.googleapis.com/v1beta';
     }
-
-    const cleanKey = apiKey ? apiKey.trim() : '';
-    const safeModel = (model && model.trim() && model !== 'custom') ? model.trim() : 'gemini-3.1-flash-lite';
 
     if (base.includes('/models/')) {
       const sep = base.includes('?') ? '&' : '?';
@@ -51,18 +87,26 @@ class GeminiClient {
   /**
    * Helper to create request headers compatible with Gemini API and custom proxies
    */
-  static getHeaders(apiKey, baseUrl = '') {
+  static getHeaders(apiKey, baseUrl = '', model = '') {
     const cleanKey = apiKey ? apiKey.trim() : '';
     const headers = {
       'Content-Type': 'application/json'
     };
-    if (cleanKey) {
+
+    if (this.isOpenAiCompatible(baseUrl, cleanKey, model)) {
+      if (cleanKey) {
+        headers['Authorization'] = cleanKey.startsWith('Bearer ') ? cleanKey : `Bearer ${cleanKey}`;
+      }
+      if (baseUrl && baseUrl.includes('openrouter.ai')) {
+        headers['HTTP-Referer'] = 'https://monev.maganghub.kemnaker.go.id';
+        headers['X-Title'] = 'MagangHub AI Assistant';
+      }
+    } else {
       if (cleanKey.startsWith('sk-') || cleanKey.startsWith('Bearer ')) {
         headers['Authorization'] = cleanKey.startsWith('Bearer ') ? cleanKey : `Bearer ${cleanKey}`;
-      } else if (baseUrl && !baseUrl.includes('generativelanguage.googleapis.com') && !cleanKey.startsWith('AIza')) {
-        headers['Authorization'] = `Bearer ${cleanKey}`;
       }
     }
+
     return headers;
   }
 
@@ -75,16 +119,26 @@ class GeminiClient {
     }
 
     const resolvedModel = (model === 'custom' || !model) ? 'gemini-3.1-flash-lite' : model;
+    const isOAI = this.isOpenAiCompatible(baseUrl, apiKey, resolvedModel);
     const url = this.getEndpointUrl(baseUrl, resolvedModel, apiKey);
-    const headers = this.getHeaders(apiKey, baseUrl);
+    const headers = this.getHeaders(apiKey, baseUrl, resolvedModel);
+
+    const body = isOAI
+      ? JSON.stringify({
+          model: resolvedModel,
+          messages: [{ role: 'user', content: 'Ping test. Balas dengan: OK' }],
+          max_tokens: 20,
+          temperature: 0.2
+        })
+      : JSON.stringify({
+          contents: [{ parts: [{ text: 'Ping test. Balas dengan: OK' }] }],
+          generationConfig: { maxOutputTokens: 20 }
+        });
 
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: 'Ping test. Balas dengan: OK' }] }],
-        generationConfig: { maxOutputTokens: 20 }
-      })
+      body
     });
 
     if (!response.ok) {
@@ -92,7 +146,7 @@ class GeminiClient {
       let msg = `Error ${response.status}`;
       try {
         const errJson = JSON.parse(errText);
-        msg = errJson.error?.message || msg;
+        msg = errJson.error?.message || errJson.message || errJson.detail || msg;
       } catch (e) {
         msg = errText.slice(0, 200);
       }
@@ -183,8 +237,32 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
     const baseUrl = options.apiBaseUrl || '';
     const historyList = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
     const prompt = this.buildPrompt(bullets, options, historyList);
+
+    const isOAI = this.isOpenAiCompatible(baseUrl, apiKey, model);
     const url = this.getEndpointUrl(baseUrl, model, apiKey);
-    const headers = this.getHeaders(apiKey, baseUrl);
+    const headers = this.getHeaders(apiKey, baseUrl, model);
+
+    const reqBody = isOAI
+      ? JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.6,
+          top_p: 0.95,
+          max_tokens: 2048
+        })
+      : JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.6,
+            topK: 40,
+            topP: 0.95
+          }
+        });
 
     const delays = [1500, 3000, 5000];
     let data = null;
@@ -194,14 +272,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
         const response = await fetch(url, {
           method: 'POST',
           headers,
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.6,
-              topK: 40,
-              topP: 0.95
-            }
-          })
+          body: reqBody
         });
 
         if (!response.ok) {
@@ -209,7 +280,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
           let parsedError = `HTTP ${response.status}`;
           try {
             const errObj = JSON.parse(errText);
-            parsedError = errObj.error?.message || parsedError;
+            parsedError = errObj.error?.message || errObj.message || errObj.detail || parsedError;
           } catch (e) {
             parsedError = errText.slice(0, 200);
           }
@@ -223,7 +294,8 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
             continue;
           }
 
-          throw new Error(`Gemini API [${response.status}]: ${parsedError}`);
+          const providerLabel = isOAI ? 'AI Server' : 'Gemini API';
+          throw new Error(`${providerLabel} [${response.status}]: ${parsedError}`);
         }
 
         data = await response.json();
@@ -235,21 +307,44 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
       }
     }
 
-    const rawText = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
-    if (!rawText) {
-      throw new Error('Tidak ada respons teks yang diterima dari model Gemini.');
+    let rawText = '';
+    if (data?.choices?.[0]?.message?.content) {
+      rawText = data.choices[0].message.content;
+    } else if (data?.candidates?.[0]?.content?.parts) {
+      rawText = data.candidates[0].content.parts.map((p) => p.text).join('');
+    } else if (typeof data === 'string') {
+      rawText = data;
     }
 
+    if (!rawText || !rawText.trim()) {
+      throw new Error('Tidak ada respons teks yang diterima dari model AI.');
+    }
+
+    // Strip <think>...</think> if reasoning model outputted thoughts
+    let cleanCandidate = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
     // Clean any markdown formatting backticks if present
-    const cleanedText = rawText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/```\s*$/i, '')
-      .trim();
+    const jsonBlockMatch = cleanCandidate.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (jsonBlockMatch) {
+      cleanCandidate = jsonBlockMatch[1].trim();
+    } else {
+      cleanCandidate = cleanCandidate
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+    }
+
+    // Extract JSON object from enclosing text if needed
+    const firstBrace = cleanCandidate.indexOf('{');
+    const lastBrace = cleanCandidate.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      cleanCandidate = cleanCandidate.substring(firstBrace, lastBrace + 1).trim();
+    }
 
     let parsed;
     try {
-      parsed = JSON.parse(cleanedText);
+      parsed = JSON.parse(cleanCandidate);
     } catch (e) {
       // Fallback regex extractor if JSON parse fails
       const aktivitasMatch = rawText.match(/"aktivitas"\s*:\s*"([\s\S]*?)"(?=,\s*"pembelajaran")/i);

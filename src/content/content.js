@@ -278,12 +278,12 @@
         </div>
 
         <div class="quick-settings" id="quickSettings">
-          <span class="field-label">Gemini API Key</span>
-          <input type="password" id="inputApiKey" placeholder="AIzaSy..." />
+          <span class="field-label">API Key (Gemini / NVIDIA NIM / dll)</span>
+          <input type="password" id="inputApiKey" placeholder="AIzaSy... / nvapi-... / sk-..." />
           <span class="field-label" style="margin-top:6px;">API Base URL (Opsional)</span>
-          <input type="text" id="inputBaseUrl" placeholder="https://generativelanguage.googleapis.com/v1beta" />
+          <input type="text" id="inputBaseUrl" placeholder="Contoh: https://integrate.api.nvidia.com/v1" />
           <button class="btn-save-key" id="btnSaveKey">Simpan Pengaturan</button>
-          <span style="font-size:10px; color:#94a3b8;">Dapatkan gratis di <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#3b82f6;">aistudio.google.com/apikey</a></span>
+          <span style="font-size:10px; color:#94a3b8;">Mendukung Google Gemini (AI Studio), NVIDIA NIM, OpenRouter, dll.</span>
         </div>
 
         <div>

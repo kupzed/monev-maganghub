@@ -66,9 +66,9 @@
           </p>
 
           <div class="form-group">
-            <label for="optApiKey">Gemini API Key</label>
+            <label for="optApiKey">AI API Key (Gemini / NVIDIA NIM / dll)</label>
             <div class="input-with-button">
-              <input type="password" id="optApiKey" placeholder="AIzaSy..." autocomplete="off">
+              <input type="password" id="optApiKey" placeholder="AIzaSy... / nvapi-... / sk-..." autocomplete="off">
               <button id="btnToggleKeyVisibility" class="btn-outline-sm" type="button">👁️ Lihat</button>
               <button id="btnTestApiKey" class="btn-secondary-sm" type="button">⚡ Test Koneksi</button>
             </div>
@@ -78,7 +78,7 @@
           <div class="form-group" style="margin-top: 14px;">
             <label for="optBaseUrl">API Base URL (Custom Endpoint)</label>
             <input type="text" id="optBaseUrl" placeholder="https://generativelanguage.googleapis.com/v1beta" autocomplete="off">
-            <span class="field-hint">Default: <code>https://generativelanguage.googleapis.com/v1beta</code>. Sesuaikan jika kamu menggunakan custom reverse proxy, Cloudflare Worker, atau endpoint sendiri.</span>
+            <span class="field-hint">Default: <code>https://generativelanguage.googleapis.com/v1beta</code>. Untuk NVIDIA NIM gunakan <code>https://integrate.api.nvidia.com/v1</code>, atau gunakan endpoint OpenRouter / proxy kustom.</span>
           </div>
         </div>
 
