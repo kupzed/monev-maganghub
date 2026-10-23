@@ -156,7 +156,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiKeyStatusText.style.color = '#64748b';
 
     try {
-      await GeminiClient.testApiKey(key, model, baseUrl);
+      let tested = false;
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        const bgRes = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({
+            type: 'TEST_API_KEY',
+            apiKey: key,
+            model,
+            baseUrl
+          }, (res) => {
+            if (chrome.runtime.lastError) {
+              resolve(null);
+            } else {
+              resolve(res);
+            }
+          });
+        });
+
+        if (bgRes) {
+          if (!bgRes.success) throw new Error(bgRes.error);
+          tested = true;
+        }
+      }
+
+      if (!tested) {
+        await GeminiClient.testApiKey(key, model, baseUrl);
+      }
       apiKeyStatusText.textContent = 'Status: Koneksi Berhasil! API Key & Endpoint aktif dan valid.';
       apiKeyStatusText.style.color = '#10b981';
       showToast('Koneksi API Key & Endpoint berhasil!', 'success');

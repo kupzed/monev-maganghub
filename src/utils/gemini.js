@@ -51,15 +51,16 @@ class GeminiClient {
   /**
    * Helper to create request headers compatible with Gemini API and custom proxies
    */
-  static getHeaders(apiKey) {
+  static getHeaders(apiKey, baseUrl = '') {
     const cleanKey = apiKey ? apiKey.trim() : '';
     const headers = {
       'Content-Type': 'application/json'
     };
     if (cleanKey) {
-      headers['x-goog-api-key'] = cleanKey;
       if (cleanKey.startsWith('sk-') || cleanKey.startsWith('Bearer ')) {
         headers['Authorization'] = cleanKey.startsWith('Bearer ') ? cleanKey : `Bearer ${cleanKey}`;
+      } else if (baseUrl && !baseUrl.includes('generativelanguage.googleapis.com') && !cleanKey.startsWith('AIza')) {
+        headers['Authorization'] = `Bearer ${cleanKey}`;
       }
     }
     return headers;
@@ -75,7 +76,7 @@ class GeminiClient {
 
     const resolvedModel = (model === 'custom' || !model) ? 'gemini-3.1-flash-lite' : model;
     const url = this.getEndpointUrl(baseUrl, resolvedModel, apiKey);
-    const headers = this.getHeaders(apiKey);
+    const headers = this.getHeaders(apiKey, baseUrl);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -183,7 +184,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
     const historyList = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
     const prompt = this.buildPrompt(bullets, options, historyList);
     const url = this.getEndpointUrl(baseUrl, model, apiKey);
-    const headers = this.getHeaders(apiKey);
+    const headers = this.getHeaders(apiKey, baseUrl);
 
     const delays = [1500, 3000, 5000];
     let data = null;

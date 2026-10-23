@@ -210,7 +210,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const history = await StorageUtil.getHistory();
-      const result = await GeminiClient.generateReport(settings.geminiApiKey, bullets, settings, null, history);
+      let result;
+
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        const bgRes = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({
+            type: 'GENERATE_REPORT',
+            apiKey: settings.geminiApiKey,
+            bullets,
+            settings,
+            history
+          }, (res) => {
+            if (chrome.runtime.lastError) {
+              resolve(null);
+            } else {
+              resolve(res);
+            }
+          });
+        });
+
+        if (bgRes) {
+          if (!bgRes.success) throw new Error(bgRes.error);
+          result = bgRes.result;
+        }
+      }
+
+      if (!result) {
+        result = await GeminiClient.generateReport(settings.geminiApiKey, bullets, settings, null, history);
+      }
 
       resAktivitas.value = result.aktivitas;
       resPembelajaran.value = result.pembelajaran;

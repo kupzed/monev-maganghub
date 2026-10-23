@@ -649,24 +649,52 @@
     setStatus('Sedang menyusun laporan dengan AI...', '');
 
     try {
+      const fullSettings = typeof StorageUtil !== 'undefined' ? await StorageUtil.getSettings() : await chrome.storage.local.get(null);
+      if (modelSelect && modelSelect.value) {
+        fullSettings.selectedModel = modelSelect.value;
+      }
+      if (inputCustomModel && inputCustomModel.value) {
+        fullSettings.customModelName = inputCustomModel.value.trim();
+      }
+      if (inputBaseUrl && inputBaseUrl.value) {
+        fullSettings.apiBaseUrl = inputBaseUrl.value.trim();
+      }
+      const history = typeof StorageUtil !== 'undefined' ? await StorageUtil.getHistory() : [];
+
       let result;
-      if (typeof GeminiClient !== 'undefined') {
-        const fullSettings = typeof StorageUtil !== 'undefined' ? await StorageUtil.getSettings() : await chrome.storage.local.get(null);
-        if (modelSelect && modelSelect.value) {
-          fullSettings.selectedModel = modelSelect.value;
+
+      // Primary: delegate fetch to background service worker to avoid webpage CORS / CSP blocks in Manifest V3
+      let bgResponse = await new Promise((resolve) => {
+        if (!chrome.runtime || !chrome.runtime.sendMessage) {
+          return resolve(null);
         }
-        if (inputCustomModel && inputCustomModel.value) {
-          fullSettings.customModelName = inputCustomModel.value.trim();
+        chrome.runtime.sendMessage({
+          type: 'GENERATE_REPORT',
+          apiKey: geminiApiKey,
+          bullets,
+          settings: fullSettings,
+          history
+        }, (res) => {
+          if (chrome.runtime.lastError) {
+            console.warn('[MagangHub In-Page] Background worker unavailable, falling back:', chrome.runtime.lastError.message);
+            resolve(null);
+          } else {
+            resolve(res);
+          }
+        });
+      });
+
+      if (bgResponse) {
+        if (!bgResponse.success) {
+          throw new Error(bgResponse.error || 'Gagal menghasilkan laporan.');
         }
-        if (inputBaseUrl && inputBaseUrl.value) {
-          fullSettings.apiBaseUrl = inputBaseUrl.value.trim();
-        }
-        const history = typeof StorageUtil !== 'undefined' ? await StorageUtil.getHistory() : [];
+        result = bgResponse.result;
+      } else if (typeof GeminiClient !== 'undefined') {
         result = await GeminiClient.generateReport(geminiApiKey, bullets, fullSettings, (attempt, max) => {
           setStatus(`Server AI sibuk, mencoba ulang (${attempt}/${max})...`, '');
         }, history);
       } else {
-        throw new Error('Modul AI Client belum termuat.');
+        throw new Error('Gagal memproses laporan: background service worker dan AI client tidak merespons.');
       }
 
       prevAktivitas.value = result.aktivitas;

@@ -3,6 +3,8 @@
  * Handles daily attendance reminder alarms, native OS notifications, and tab navigation.
  */
 
+importScripts('../utils/storage.js', '../utils/gemini.js');
+
 const ALARM_NAME = 'maganghub_daily_reminder';
 
 /**
@@ -249,6 +251,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         reminderTime: data.reminderTime || '17:00',
         nextAlarm: alarm ? new Date(alarm.scheduledTime).toLocaleString() : null
       });
+    })();
+    return true;
+  }
+
+  if (message.type === 'GENERATE_REPORT') {
+    (async () => {
+      try {
+        const key = message.apiKey || (await StorageUtil.getSettings()).geminiApiKey;
+        const settings = message.settings || (await StorageUtil.getSettings());
+        const history = message.history || (await StorageUtil.getHistory());
+        const result = await GeminiClient.generateReport(key, message.bullets, settings, null, history);
+        sendResponse({ success: true, result });
+      } catch (err) {
+        console.error('[MagangHub Background] Generation error:', err);
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  if (message.type === 'TEST_API_KEY') {
+    (async () => {
+      try {
+        const { apiKey, model, baseUrl } = message;
+        await GeminiClient.testApiKey(apiKey, model, baseUrl);
+        sendResponse({ success: true });
+      } catch (err) {
+        console.error('[MagangHub Background] Test connection error:', err);
+        sendResponse({ success: false, error: err.message });
+      }
     })();
     return true;
   }
