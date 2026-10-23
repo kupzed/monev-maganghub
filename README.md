@@ -10,7 +10,7 @@
 
 ## 🌟 Fitur Utama
 
-- ⚡ **AI Generator Multi-Model**: Mendukung Google Gemini 3.1 Flash-Lite, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, dan Gemini 1.5 Flash.
+- ⚡ **AI Generator Multi-Model & Custom Endpoint**: Mendukung Google Gemini 3.1 Flash-Lite, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, Gemini 1.5 Flash, Custom Model, serta kustomisasi API Base URL (proxy / custom endpoint).
 - 🧠 **AI Contextual Memory**: AI secara cerdas mengingat 1–5 laporan hari-hari sebelumnya sehingga narasi tugas terasa berkesinambungan dan memahami referensi seperti *"melanjutkan task kemarin"*.
 - 🎨 **Gaya Bahasa Fleksibel**: Pilihan tone formal akademik, sangat terperinci, ringkas padat, atau santun luwes.
 - 📝 **Draggable Floating Action Button (FAB)**: Tombol asisten di portal Monev MagangHub yang bisa digeser (drag & drop) ke posisi mana saja di layar dan mengingat posisinya.

@@ -5,7 +5,9 @@
 
 const DEFAULT_SETTINGS = {
   geminiApiKey: '',
+  apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   selectedModel: 'gemini-3.1-flash-lite',
+  customModelName: '',
   reportTone: 'formal', // 'formal', 'detailed', 'concise', 'casual_polite'
   customInstructions: '',
   reminderEnabled: true,

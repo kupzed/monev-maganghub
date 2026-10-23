@@ -8,10 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // AI Tab Elements
   const optApiKey = document.getElementById('optApiKey');
+  const optBaseUrl = document.getElementById('optBaseUrl');
   const btnToggleKeyVisibility = document.getElementById('btnToggleKeyVisibility');
   const btnTestApiKey = document.getElementById('btnTestApiKey');
   const apiKeyStatusText = document.getElementById('apiKeyStatusText');
   const optModel = document.getElementById('optModel');
+  const groupCustomModel = document.getElementById('groupCustomModel');
+  const optCustomModel = document.getElementById('optCustomModel');
   const optTone = document.getElementById('optTone');
   const optCustomInstructions = document.getElementById('optCustomInstructions');
   const optEnableMemoryContext = document.getElementById('optEnableMemoryContext');
@@ -80,6 +83,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await StorageUtil.getSettings();
 
   optApiKey.value = settings.geminiApiKey || '';
+  if (optBaseUrl) {
+    optBaseUrl.value = settings.apiBaseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+  }
+
+  function updateCustomModelVisibility() {
+    if (groupCustomModel) {
+      groupCustomModel.style.display = optModel.value === 'custom' ? 'block' : 'none';
+    }
+  }
 
   if (typeof AVAILABLE_MODELS !== 'undefined' && AVAILABLE_MODELS.length > 0) {
     optModel.innerHTML = '';
@@ -92,6 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   optModel.value = settings.selectedModel || 'gemini-3.1-flash-lite';
+  if (optCustomModel) {
+    optCustomModel.value = settings.customModelName || '';
+  }
+  updateCustomModelVisibility();
+  optModel.addEventListener('change', updateCustomModelVisibility);
+
   optTone.value = settings.reportTone || 'formal';
   optCustomInstructions.value = settings.customInstructions || '';
   optEnableMemoryContext.checked = settings.enableMemoryContext !== undefined ? settings.enableMemoryContext : true;
@@ -120,7 +138,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Test API Key
   btnTestApiKey.addEventListener('click', async () => {
     const key = optApiKey.value.trim();
-    const model = optModel.value;
+    let model = optModel.value;
+    if (model === 'custom' && optCustomModel) {
+      model = optCustomModel.value.trim() || 'gemini-3.1-flash-lite';
+    }
+    const baseUrl = optBaseUrl ? optBaseUrl.value.trim() : '';
 
     if (!key) {
       showToast('Masukkan API Key terlebih dahulu.', 'error');
@@ -130,14 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnTestApiKey.disabled = true;
     btnTestApiKey.textContent = '⏳ Menguji...';
-    apiKeyStatusText.textContent = 'Status: Menghubungi server Google Gemini...';
+    apiKeyStatusText.textContent = 'Status: Menghubungi server AI...';
     apiKeyStatusText.style.color = '#64748b';
 
     try {
-      await GeminiClient.testApiKey(key, model);
-      apiKeyStatusText.textContent = 'Status: Koneksi Berhasil! API Key aktif dan valid.';
+      await GeminiClient.testApiKey(key, model, baseUrl);
+      apiKeyStatusText.textContent = 'Status: Koneksi Berhasil! API Key & Endpoint aktif dan valid.';
       apiKeyStatusText.style.color = '#10b981';
-      showToast('Koneksi API Key berhasil!', 'success');
+      showToast('Koneksi API Key & Endpoint berhasil!', 'success');
     } catch (err) {
       console.error('[MagangHub Test API]', err);
       apiKeyStatusText.textContent = `Status Gagal: ${err.message}`;
@@ -152,7 +174,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Save AI Settings
   btnSaveAiSettings.addEventListener('click', async () => {
     const key = optApiKey.value.trim();
+    const baseUrl = optBaseUrl ? (optBaseUrl.value.trim() || 'https://generativelanguage.googleapis.com/v1beta') : 'https://generativelanguage.googleapis.com/v1beta';
     const model = optModel.value;
+    const customModel = optCustomModel ? optCustomModel.value.trim() : '';
     const tone = optTone.value;
     const customInstructions = optCustomInstructions.value.trim();
     const enableMemory = optEnableMemoryContext.checked;
@@ -160,14 +184,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await StorageUtil.saveSettings({
       geminiApiKey: key,
+      apiBaseUrl: baseUrl,
       selectedModel: model,
+      customModelName: customModel,
       reportTone: tone,
       customInstructions: customInstructions,
       enableMemoryContext: enableMemory,
       memoryContextCount: memoryCount
     });
 
-    showToast('Konfigurasi AI & Memori berhasil disimpan!', 'success');
+    showToast('Konfigurasi AI & Endpoint berhasil disimpan!', 'success');
   });
 
   // Save Reminder Settings

@@ -36,7 +36,8 @@
   ],
   "host_permissions": [
     "https://monev.maganghub.kemnaker.go.id/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "https://*/*"
   ],
   "content_scripts": [
     {

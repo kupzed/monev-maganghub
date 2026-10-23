@@ -280,7 +280,9 @@
         <div class="quick-settings" id="quickSettings">
           <span class="field-label">Gemini API Key</span>
           <input type="password" id="inputApiKey" placeholder="AIzaSy..." />
-          <button class="btn-save-key" id="btnSaveKey">Simpan Key</button>
+          <span class="field-label" style="margin-top:6px;">API Base URL (Opsional)</span>
+          <input type="text" id="inputBaseUrl" placeholder="https://generativelanguage.googleapis.com/v1beta" />
+          <button class="btn-save-key" id="btnSaveKey">Simpan Pengaturan</button>
           <span style="font-size:10px; color:#94a3b8;">Dapatkan gratis di <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#3b82f6;">aistudio.google.com/apikey</a></span>
         </div>
 
@@ -288,6 +290,11 @@
           <span class="field-label">Pilih Model AI</span>
           <select class="preset-dropdown" id="modelSelect">
           </select>
+        </div>
+
+        <div id="customModelGroup" style="display: none;">
+          <span class="field-label">Nama Model Kustom</span>
+          <input type="text" class="preset-dropdown" id="inputCustomModel" placeholder="Contoh: gemini-exp-1206, model-id" />
         </div>
 
         <div>
@@ -362,7 +369,10 @@
   const quickSettings = root.getElementById('quickSettings');
   const inputApiKey = root.getElementById('inputApiKey');
   const btnSaveKey = root.getElementById('btnSaveKey');
+  const inputBaseUrl = root.getElementById('inputBaseUrl');
   const modelSelect = root.getElementById('modelSelect');
+  const customModelGroup = root.getElementById('customModelGroup');
+  const inputCustomModel = root.getElementById('inputCustomModel');
   const presetSelect = root.getElementById('presetSelect');
   const bulletsArea = root.getElementById('bulletsArea');
   const btnGenerate = root.getElementById('btnGenerate');
@@ -399,6 +409,10 @@
       quickSettings.classList.add('open');
     }
 
+    if (settings.apiBaseUrl && inputBaseUrl) {
+      inputBaseUrl.value = settings.apiBaseUrl;
+    }
+
     if (settings.lastBullets) {
       bulletsArea.value = settings.lastBullets;
     }
@@ -417,7 +431,8 @@
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Cepat & Cerdas)' },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Lebih Detail & Mendalam)' },
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' }
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' },
+      { id: 'custom', name: 'Custom Model (Model Kustom Sendiri)' }
     ];
 
     if (modelSelect) {
@@ -429,6 +444,14 @@
         modelSelect.appendChild(opt);
       });
       modelSelect.value = settings.selectedModel || 'gemini-3.1-flash-lite';
+    }
+
+    if (settings.customModelName && inputCustomModel) {
+      inputCustomModel.value = settings.customModelName;
+    }
+
+    if (customModelGroup && modelSelect) {
+      customModelGroup.style.display = modelSelect.value === 'custom' ? 'block' : 'none';
     }
 
     // Populate Templates
@@ -509,16 +532,24 @@
   btnClosePanel.addEventListener('click', () => panel.classList.remove('open'));
   btnSettingsToggle.addEventListener('click', () => quickSettings.classList.toggle('open'));
 
-  // Save API Key
+  // Save API Key & Base URL
   btnSaveKey.addEventListener('click', async () => {
     const key = inputApiKey.value.trim();
+    const baseUrl = inputBaseUrl ? inputBaseUrl.value.trim() : '';
     if (!key) {
       setStatus('API Key tidak boleh kosong.', 'error');
       return;
     }
-    await chrome.storage.local.set({ geminiApiKey: key });
+    const update = { geminiApiKey: key };
+    if (baseUrl) update.apiBaseUrl = baseUrl;
+    if (typeof StorageUtil !== 'undefined') {
+      await StorageUtil.saveSettings(update);
+    } else {
+      await chrome.storage.local.set(update);
+    }
     settings.geminiApiKey = key;
-    setStatus('API Key berhasil disimpan!', 'success');
+    if (baseUrl) settings.apiBaseUrl = baseUrl;
+    setStatus('API Key & Base URL berhasil disimpan!', 'success');
     setTimeout(() => quickSettings.classList.remove('open'), 1200);
   });
 
@@ -526,6 +557,9 @@
   if (modelSelect) {
     modelSelect.addEventListener('change', async () => {
       const selectedModel = modelSelect.value;
+      if (customModelGroup) {
+        customModelGroup.style.display = selectedModel === 'custom' ? 'block' : 'none';
+      }
       settings.selectedModel = selectedModel;
       if (typeof StorageUtil !== 'undefined') {
         await StorageUtil.saveSettings({ selectedModel });
@@ -538,6 +572,19 @@
           widgetStatus.textContent = '';
         }
       }, 2000);
+    });
+  }
+
+  // Custom Model Input Handler
+  if (inputCustomModel) {
+    inputCustomModel.addEventListener('input', async () => {
+      const customModelName = inputCustomModel.value.trim();
+      settings.customModelName = customModelName;
+      if (typeof StorageUtil !== 'undefined') {
+        await StorageUtil.saveSettings({ customModelName });
+      } else {
+        await chrome.storage.local.set({ customModelName });
+      }
     });
   }
 
@@ -607,6 +654,12 @@
         const fullSettings = typeof StorageUtil !== 'undefined' ? await StorageUtil.getSettings() : await chrome.storage.local.get(null);
         if (modelSelect && modelSelect.value) {
           fullSettings.selectedModel = modelSelect.value;
+        }
+        if (inputCustomModel && inputCustomModel.value) {
+          fullSettings.customModelName = inputCustomModel.value.trim();
+        }
+        if (inputBaseUrl && inputBaseUrl.value) {
+          fullSettings.apiBaseUrl = inputBaseUrl.value.trim();
         }
         const history = typeof StorageUtil !== 'undefined' ? await StorageUtil.getHistory() : [];
         result = await GeminiClient.generateReport(geminiApiKey, bullets, fullSettings, (attempt, max) => {

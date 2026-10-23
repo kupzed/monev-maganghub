@@ -8,7 +8,8 @@ const AVAILABLE_MODELS = [
   { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Cepat & Cerdas)' },
   { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Lebih Detail & Mendalam)' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' }
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Stabil & Ringan)' },
+  { id: 'custom', name: 'Custom Model (Model Kustom Sendiri)' }
 ];
 
 const TONE_PROMPTS = {
@@ -24,19 +25,61 @@ class GeminiClient {
   }
 
   /**
-   * Test API Key validity
+   * Helper to resolve the correct endpoint URL given a base URL, model name, and API key
    */
-  static async testApiKey(apiKey, model = 'gemini-3.1-flash-lite') {
+  static getEndpointUrl(baseUrl, model, apiKey) {
+    let base = (baseUrl && baseUrl.trim()) ? baseUrl.trim() : 'https://generativelanguage.googleapis.com/v1beta';
+    base = base.replace(/\/+$/, '');
+
+    if (base === 'https://generativelanguage.googleapis.com') {
+      base = 'https://generativelanguage.googleapis.com/v1beta';
+    }
+
+    const cleanKey = apiKey ? apiKey.trim() : '';
+    const safeModel = (model && model.trim() && model !== 'custom') ? model.trim() : 'gemini-3.1-flash-lite';
+
+    if (base.includes('/models/')) {
+      const sep = base.includes('?') ? '&' : '?';
+      return cleanKey ? `${base}:generateContent${sep}key=${encodeURIComponent(cleanKey)}` : `${base}:generateContent`;
+    }
+
+    return cleanKey
+      ? `${base}/models/${safeModel}:generateContent?key=${encodeURIComponent(cleanKey)}`
+      : `${base}/models/${safeModel}:generateContent`;
+  }
+
+  /**
+   * Helper to create request headers compatible with Gemini API and custom proxies
+   */
+  static getHeaders(apiKey) {
+    const cleanKey = apiKey ? apiKey.trim() : '';
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (cleanKey) {
+      headers['x-goog-api-key'] = cleanKey;
+      if (cleanKey.startsWith('sk-') || cleanKey.startsWith('Bearer ')) {
+        headers['Authorization'] = cleanKey.startsWith('Bearer ') ? cleanKey : `Bearer ${cleanKey}`;
+      }
+    }
+    return headers;
+  }
+
+  /**
+   * Test API Key and Base URL validity
+   */
+  static async testApiKey(apiKey, model = 'gemini-3.1-flash-lite', baseUrl = '') {
     if (!apiKey || !apiKey.trim()) {
       throw new Error('API Key tidak boleh kosong.');
     }
 
-    const cleanKey = apiKey.trim();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+    const resolvedModel = (model === 'custom' || !model) ? 'gemini-3.1-flash-lite' : model;
+    const url = this.getEndpointUrl(baseUrl, resolvedModel, apiKey);
+    const headers = this.getHeaders(apiKey);
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         contents: [{ parts: [{ text: 'Ping test. Balas dengan: OK' }] }],
         generationConfig: { maxOutputTokens: 20 }
@@ -132,11 +175,15 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
       throw new Error('Poin catatan kegiatan masih kosong.');
     }
 
-    const model = options.selectedModel || 'gemini-3.1-flash-lite';
+    let model = options.selectedModel || 'gemini-3.1-flash-lite';
+    if (model === 'custom') {
+      model = (options.customModelName && options.customModelName.trim()) ? options.customModelName.trim() : 'gemini-3.1-flash-lite';
+    }
+    const baseUrl = options.apiBaseUrl || '';
     const historyList = recentHistory && recentHistory.length > 0 ? recentHistory : (options.recentHistory || []);
     const prompt = this.buildPrompt(bullets, options, historyList);
-    const cleanKey = apiKey.trim();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+    const url = this.getEndpointUrl(baseUrl, model, apiKey);
+    const headers = this.getHeaders(apiKey);
 
     const delays = [1500, 3000, 5000];
     let data = null;
@@ -145,7 +192,7 @@ Output WAJIB berupa JSON valid murni tanpa format markdown (jangan gunakan blok 
       try {
         const response = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {

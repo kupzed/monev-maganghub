@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnOpenMonev = document.getElementById('btnOpenMonev');
   const currentDateStr = document.getElementById('currentDateStr');
   const selectModel = document.getElementById('selectModel');
+  const customModelRow = document.getElementById('customModelRow');
+  const inputCustomModel = document.getElementById('inputCustomModel');
   const selectPreset = document.getElementById('selectPreset');
   const bulletsInput = document.getElementById('bulletsInput');
   const btnGenerate = document.getElementById('btnGenerate');
@@ -43,8 +45,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusActionBtn.classList.remove('hidden');
     } else {
       statusBanner.className = 'status-banner ready';
-      statusText.textContent = `Siap (${settings.selectedModel || 'gemini-3.1-flash-lite'})`;
+      const activeModel = settings.selectedModel === 'custom' ? (settings.customModelName || 'custom') : (settings.selectedModel || 'gemini-3.1-flash-lite');
+      statusText.textContent = `Siap (${activeModel})`;
       statusActionBtn.classList.add('hidden');
+    }
+  }
+
+  function updateCustomModelVisibility() {
+    if (customModelRow && selectModel) {
+      customModelRow.style.display = selectModel.value === 'custom' ? 'flex' : 'none';
     }
   }
 
@@ -60,13 +69,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       selectModel.appendChild(opt);
     });
     selectModel.value = settings.selectedModel || 'gemini-3.1-flash-lite';
+    if (inputCustomModel) {
+      inputCustomModel.value = settings.customModelName || '';
+    }
+    updateCustomModelVisibility();
 
     selectModel.addEventListener('change', async () => {
       const chosen = selectModel.value;
+      updateCustomModelVisibility();
       settings.selectedModel = chosen;
       await StorageUtil.saveSettings({ selectedModel: chosen });
       updateStatusUI();
     });
+
+    if (inputCustomModel) {
+      inputCustomModel.addEventListener('input', async () => {
+        const customName = inputCustomModel.value.trim();
+        settings.customModelName = customName;
+        await StorageUtil.saveSettings({ customModelName: customName });
+        updateStatusUI();
+      });
+    }
   }
 
   // Restore last bullets if available
@@ -169,6 +192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     settings = await StorageUtil.getSettings();
     if (selectModel && selectModel.value) {
       settings.selectedModel = selectModel.value;
+    }
+    if (inputCustomModel && inputCustomModel.value) {
+      settings.customModelName = inputCustomModel.value.trim();
     }
     if (!settings.geminiApiKey) {
       alert('Gemini API Key belum diatur. Silakan atur di menu Pengaturan.');
